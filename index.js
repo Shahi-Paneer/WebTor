@@ -16,53 +16,49 @@ app.use(express.static('pages'));
 io.on('connection', function (socket) {
 
     console.log('A user connected');
-
     socket.on('magnet', function (link, callback) {
 
 
-        console.log(link)
+        // console.log(link)
 
         let torrentId = link
-        let files
-        let names = []
-        client.add(torrentId, torrent => {
-            files = torrent.files
-            let length = files.length
-            console.log(files)
+        if (client.get(torrentId) == null) {
+            let files
+            let names = []
+            client.add(torrentId, torrent => {
+                files = torrent.files
+                let length = files.length
+                // console.log(files)
 
-            files.forEach(element => {
-                names.push(element.name)
-            });
+                files.forEach(element => {
+                    names.push(element.name)
+                });
 
-            socket.emit('files', names, function(data){
+                socket.emit('files', names, function (data) {
 
-                console.log(data)
-                files.forEach(file => {
-                  
-                    if (data.includes(file.name) == true){
-                    const source = file.createReadStream()
-                    const destination = fs.createWriteStream(file.name)
-                    source.on('end', () => {
-                        console.log('file:\t\t', file.name)
-                        // close after all files are saved
-                        length -= 1
-                    }).pipe(destination)
-                }
+                    files.forEach(file => {
+
+                        if (data.includes(file.name) == true) {
+                            console.log(client.get(torrentId).magnetURI, "HHIHIHI")
+                            const source = file.createReadStream()
+                            const destination = fs.createWriteStream(file.name)
+                            source.on('end', () => {
+                                console.log(client.get(), "HHIHIHI")
+
+                            }).pipe(destination)
+
+                        }
+
+                    })
+                    client.remove(torrentId)
                 })
 
+
             })
-            
-            // Stream each file to the disk
-           /* files.forEach(file => {
-                const source = file.createReadStream()
-                const destination = fs.createWriteStream(file.name)
-                source.on('end', () => {
-                    console.log('file:\t\t', file.name)
-                    // close after all files are saved
-                    length -= 1
-                }).pipe(destination)
-            }) */
-        })
+        } else {
+            console.log("torrent exists already")
+        }
+
 
 
     })
@@ -71,3 +67,4 @@ io.on('connection', function (socket) {
 
 
 server.listen(port);
+console.log(`Server listening on port: ${port}`)
