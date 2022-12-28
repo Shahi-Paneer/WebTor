@@ -12,17 +12,26 @@ const fs = require('fs')
 
 const client = new WebTorrent()
 app.use(express.static('pages'));
-
+let config = require('./config.json')
+console.log(config)
 io.on('connection', function (socket) {
 
-    console.log('A user connected');
+    //console.log('A user connected');
     socket.on('magnet', function (link, callback) {
 
 
         // console.log(link)
 
         let torrentId = link
-        if (client.get(torrentId) == null) {
+
+        if (client.get(torrentId) != null) {
+
+            console.log("torrent exists already")
+            client.remove(torrentId)
+            console.log(client.get(torrentId))
+           // socket.emit('done')
+        }
+
             let files
             let names = []
             client.add(torrentId, torrent => {
@@ -33,31 +42,32 @@ io.on('connection', function (socket) {
                 files.forEach(element => {
                     names.push(element.name)
                 });
+                console.log(names)
+                socket.emit('files', names)
 
-                socket.emit('files', names, function (data) {
-
-                    files.forEach(file => {
+                socket.on("selected", function(data) {
+                    console.log(data)
+                   files.forEach(file => {
 
                         if (data.includes(file.name) == true) {
-                            console.log(client.get(torrentId).magnetURI, "HHIHIHI")
+                            console.log(client.downloadSpeed)
                             const source = file.createReadStream()
-                            const destination = fs.createWriteStream(file.name)
+                            const destination = fs.createWriteStream(config.path + "/" +file.name)
                             source.on('end', () => {
-                                console.log(client.get(), "HHIHIHI")
-
                             }).pipe(destination)
 
                         }
 
                     })
                     client.remove(torrentId)
-                })
+                    console.log("Done")
+                    socket.emit('done')
+
+                });
 
 
             })
-        } else {
-            console.log("torrent exists already")
-        }
+     
 
 
 
