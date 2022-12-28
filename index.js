@@ -6,7 +6,6 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 const path = require('path')
-const port = 3000
 const WebTorrent = require('webtorrent')
 const fs = require('fs')
 
@@ -76,5 +75,5 @@ io.on('connection', function (socket) {
 });
 
 
-server.listen(port);
-console.log(`Server listening on port: ${port}`)
+server.listen(config.port);
+console.log(`Server listening on port: ${config.port}`)
